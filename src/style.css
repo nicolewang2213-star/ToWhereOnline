@@ -29,6 +29,210 @@ button:active {
   opacity: 0.8;
 }
 
+/* N & H anniversary universe */
+.anniversary-page {
+  position: relative;
+  min-height: 100vh;
+  box-sizing: border-box;
+  overflow: auto;
+  padding: 88px 24px 54px;
+  color: #f7f5ff;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(110, 108, 255, 0.23), transparent 28%),
+    radial-gradient(circle at 15% 70%, rgba(255, 105, 180, 0.12), transparent 24%),
+    linear-gradient(160deg, #050814 0%, #0a1024 48%, #11142f 100%);
+}
+
+.anniversary-stars {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.7;
+  background-image:
+    radial-gradient(circle, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(154, 210, 255, 0.8) 0 1px, transparent 1.5px);
+  background-position: 0 0, 42px 58px;
+  background-size: 92px 92px, 137px 137px;
+  animation: nh-star-drift 24s linear infinite;
+}
+
+@keyframes nh-star-drift {
+  to { transform: translateY(92px); }
+}
+
+.anniversary-hero,
+.milestone-grid,
+.anniversary-note {
+  position: relative;
+  z-index: 1;
+}
+
+.anniversary-eyebrow {
+  margin: 0 0 14px;
+  color: #b9c9ff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+}
+
+.anniversary-hero h1 {
+  margin: 0;
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(30px, 4vw, 58px);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 30px rgba(175, 189, 255, 0.4);
+}
+
+.anniversary-since {
+  margin: 15px 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: 0.25em;
+}
+
+.orbit-stage {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 15px auto -8px;
+}
+
+.orbit-ring {
+  position: absolute;
+  inset: 45px;
+  border: 1px solid rgba(173, 197, 255, 0.3);
+  border-radius: 50%;
+  box-shadow: 0 0 30px rgba(98, 126, 255, 0.08) inset;
+}
+
+.orbit-ring-two {
+  inset: 22px;
+  border-color: rgba(255, 170, 214, 0.18);
+  transform: rotate(28deg) scaleY(0.55);
+}
+
+.orbit-heart {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #ff92c7;
+  font-size: 40px;
+  filter: drop-shadow(0 0 20px rgba(255, 105, 180, 0.75));
+  animation: nh-heartbeat 2.2s ease-in-out infinite;
+}
+
+@keyframes nh-heartbeat {
+  50% { transform: scale(1.13); }
+}
+
+.orbit-person {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  color: white;
+  font: 600 19px 'Orbitron', sans-serif;
+  backdrop-filter: blur(8px);
+}
+
+.orbit-person-n {
+  top: 44px;
+  left: 33px;
+  background: rgba(255, 143, 196, 0.2);
+  box-shadow: 0 0 24px rgba(255, 143, 196, 0.4);
+}
+
+.orbit-person-h {
+  right: 31px;
+  bottom: 48px;
+  background: rgba(106, 194, 255, 0.2);
+  box-shadow: 0 0 24px rgba(106, 194, 255, 0.4);
+}
+
+.together-count strong {
+  display: block;
+  font: 300 clamp(58px, 7vw, 94px) 'Rajdhani', sans-serif;
+  line-height: 0.8;
+  color: #fff;
+}
+
+.together-count span {
+  display: block;
+  margin-top: 15px;
+  color: rgba(255, 255, 255, 0.68);
+  letter-spacing: 0.16em;
+}
+
+.milestone-grid {
+  width: min(960px, 100%);
+  margin: 42px auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.milestone-card {
+  padding: 24px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(16px);
+}
+
+.milestone-card p {
+  margin: 12px 0 5px;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 14px;
+}
+
+.milestone-card h2 {
+  margin: 0 0 7px;
+  font: 500 33px 'Rajdhani', sans-serif;
+}
+
+.milestone-card small {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.milestone-avatar,
+.milestone-icon {
+  display: inline-grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--person-color, #d4c2ff);
+  border: 1px solid currentColor;
+  box-shadow: 0 0 22px color-mix(in srgb, currentColor 35%, transparent);
+  font-family: 'Orbitron', sans-serif;
+}
+
+.anniversary-note {
+  margin: 32px 0 0;
+  color: rgba(255, 255, 255, 0.48);
+  font-family: 'Noto Serif SC', serif;
+  letter-spacing: 0.12em;
+}
+
+@media (max-width: 768px) {
+  .anniversary-page { padding: 60px 18px 118px; }
+  .anniversary-eyebrow { font-size: 10px; letter-spacing: 0.18em; }
+  .anniversary-hero h1 { font-size: 31px; line-height: 1.35; }
+  .orbit-stage { width: 220px; height: 220px; }
+  .orbit-ring { inset: 37px; }
+  .orbit-ring-two { inset: 18px; }
+  .orbit-person-n { top: 34px; left: 27px; }
+  .orbit-person-h { right: 25px; bottom: 38px; }
+  .milestone-grid { grid-template-columns: 1fr; margin-top: 34px; }
+}
+
 /* Navigation Bar */
 .fixed-navbar {
   position: fixed;
