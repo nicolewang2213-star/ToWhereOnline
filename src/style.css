@@ -431,3 +431,123 @@ button:active {
   background-color: currentColor;
   border-radius: 1px;
 }
+
+/* Camera gesture birthday opening */
+.gesture-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 300000;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: 32px 18px;
+  color: #fff;
+  text-align: center;
+  background: radial-gradient(circle at 50% 36%, #242568 0%, #080c2b 38%, #02040f 78%);
+}
+
+.gesture-space,
+.gesture-space::before,
+.gesture-space::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.9) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(154,216,255,.75) 0 1px, transparent 1.6px);
+  background-position: 0 0, 38px 62px;
+  background-size: 94px 94px, 137px 137px;
+  opacity: .42;
+  animation: gestureDrift 18s linear infinite;
+}
+
+.gesture-space::before { transform: scale(1.15); opacity: .22; animation-duration: 30s; }
+.gesture-space::after { transform: scale(.8); opacity: .18; animation-direction: reverse; }
+
+.gesture-content { position: relative; width: min(620px, 100%); }
+.gesture-kicker { margin: 0 0 24px; color: #b8c8ff; font-size: 12px; letter-spacing: .24em; }
+.gesture-content h1 { margin: 20px 0 12px; font-size: clamp(30px, 5vw, 52px); line-height: 1.18; }
+.gesture-content > p:not(.gesture-kicker) { margin: 0 auto 24px; color: rgba(255,255,255,.72); font-size: 16px; }
+
+.gesture-star {
+  width: 112px;
+  height: 112px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(192,217,255,.36);
+  border-radius: 50%;
+  color: #fff1aa;
+  font-size: 52px;
+  background: radial-gradient(circle, rgba(255,226,128,.24), rgba(130,136,255,.08) 54%, transparent 70%);
+  box-shadow: 0 0 70px rgba(131,152,255,.38), inset 0 0 28px rgba(255,255,255,.08);
+  animation: gesturePulse 2.8s ease-in-out infinite;
+}
+
+.gesture-star.is-listening { color: #fff8d3; box-shadow: 0 0 90px rgba(255,223,116,.55); }
+.gesture-primary,
+.gesture-skip {
+  min-height: 48px;
+  border-radius: 999px;
+  font: inherit;
+  cursor: pointer;
+}
+.gesture-primary {
+  min-width: 210px;
+  padding: 12px 28px;
+  border: 1px solid rgba(255,255,255,.35);
+  color: #11152f;
+  font-weight: 700;
+  background: linear-gradient(135deg, #fff4c2, #b9d9ff);
+  box-shadow: 0 14px 45px rgba(136,168,255,.28);
+}
+.gesture-skip { display: block; margin: 14px auto 0; padding: 8px 20px; border: 0; color: rgba(255,255,255,.68); background: transparent; }
+.gesture-primary:hover { transform: translateY(-2px); }
+.gesture-skip:hover { color: #fff; }
+
+.gesture-video-wrap {
+  position: relative;
+  width: min(320px, 80vw);
+  aspect-ratio: 4 / 3;
+  margin: 22px auto 14px;
+  overflow: hidden;
+  border: 1px solid rgba(184,213,255,.42);
+  border-radius: 24px;
+  background: rgba(7,10,34,.76);
+  box-shadow: 0 20px 70px rgba(0,0,0,.35), 0 0 40px rgba(110,139,255,.16);
+}
+.gesture-video-wrap.is-loading::after { content: '正在连接摄像头…'; position: absolute; inset: 0; display: grid; place-items: center; color: #cbd5ff; font-size: 14px; }
+.gesture-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); opacity: .74; }
+.gesture-scan { position: absolute; left: 8%; right: 8%; top: 20%; height: 1px; background: linear-gradient(90deg, transparent, #b9e9ff, transparent); box-shadow: 0 0 12px #8bdfff; animation: gestureScan 2.2s ease-in-out infinite; }
+.gesture-status { margin: 8px 0 !important; color: #fff !important; font-weight: 600; }
+.gesture-error { max-width: 440px; color: #ffc5cd !important; }
+.gesture-steps { display: flex; justify-content: center; gap: 9px; margin: 16px 0 4px; }
+.gesture-steps i { width: 28px; height: 4px; border-radius: 99px; background: rgba(255,255,255,.18); transition: .35s ease; }
+.gesture-steps i.done { background: #ffe79b; box-shadow: 0 0 12px rgba(255,231,155,.65); }
+
+.birthday-reveal { animation: birthdayAppear .9s cubic-bezier(.2,.8,.2,1) both; }
+.birthday-reveal > p { margin: 0 0 18px; color: #c8d2ff; font-size: 14px; letter-spacing: .28em; }
+.birthday-reveal h1 { color: #fff9df; text-shadow: 0 0 30px rgba(255,235,153,.35); }
+.birthday-reveal h2 { margin: 16px auto; color: rgba(255,255,255,.84); font-size: clamp(18px, 2.6vw, 24px); font-weight: 400; line-height: 1.6; }
+.birthday-reveal span { display: block; margin: 22px 0 34px; color: #ffbdd4; font-size: 18px; }
+.birthday-burst { margin: 0 auto 10px; color: #fff1a9; font-size: 110px; line-height: 1; filter: drop-shadow(0 0 36px rgba(255,232,139,.75)); animation: birthdayBurst 1.8s ease-out both; }
+
+@keyframes gesturePulse { 50% { transform: scale(1.07); filter: brightness(1.22); } }
+@keyframes gestureDrift { to { background-position: 94px 188px, -99px 199px; } }
+@keyframes gestureScan { 50% { top: 80%; } }
+@keyframes birthdayAppear { from { opacity: 0; transform: scale(.86); } }
+@keyframes birthdayBurst { from { transform: scale(.2) rotate(-80deg); opacity: 0; } 60% { transform: scale(1.25) rotate(8deg); } }
+
+@media (max-width: 600px) {
+  .gesture-intro { padding: 24px 16px; }
+  .gesture-kicker { font-size: 10px; letter-spacing: .16em; }
+  .gesture-star { width: 82px; height: 82px; font-size: 40px; }
+  .gesture-content h1 { font-size: 30px; }
+  .birthday-burst { font-size: 78px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gesture-space, .gesture-space::before, .gesture-space::after,
+  .gesture-star, .gesture-scan, .birthday-burst { animation: none; }
+}
