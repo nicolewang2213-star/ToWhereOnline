@@ -133,17 +133,19 @@ export default function GestureBirthdayIntro({ onDone }) {
       const interaction = interactionRef.current;
       const gathering = interaction.mode === 'carrying' || interaction.mode === 'armed';
       const bursting = interaction.mode === 'burst';
+      const heartSpread = gathering ? 0.055 : (bursting ? 3.2 : currentOpen);
       const orbX = interaction.mode === 'armed' ? 0 : interaction.x;
       const orbY = interaction.mode === 'armed' ? 0 : interaction.y;
       for (let i = 0; i < PARTICLE_COUNT; i += 1) {
         const o = i * 3;
         const wave = Math.sin(time * 1.4 + i * 0.013) * 0.025;
-        const targetX = gathering ? orbX + bases[o] * 0.12 + directions[o] * 0.025 : bases[o] + directions[o] * (bursting ? 3.2 : currentOpen) + wave;
-        const targetY = gathering ? orbY + bases[o + 1] * 0.12 + directions[o + 1] * 0.025 : bases[o + 1] + directions[o + 1] * (bursting ? 3.2 : currentOpen) + wave;
-        const targetZ = gathering ? bases[o + 2] * 0.12 : bases[o + 2] + directions[o + 2] * (bursting ? 3.2 : currentOpen);
-        array[o] = THREE.MathUtils.lerp(array[o], targetX, gathering ? 0.12 : 0.075);
-        array[o + 1] = THREE.MathUtils.lerp(array[o + 1], targetY, gathering ? 0.12 : 0.075);
-        array[o + 2] = THREE.MathUtils.lerp(array[o + 2], targetZ, gathering ? 0.12 : 0.075);
+        const followsOrb = gathering && i % 9 === 0;
+        const targetX = followsOrb ? orbX + bases[o] * 0.045 + directions[o] * 0.018 : bases[o] + directions[o] * heartSpread + wave;
+        const targetY = followsOrb ? orbY + bases[o + 1] * 0.045 + directions[o + 1] * 0.018 : bases[o + 1] + directions[o + 1] * heartSpread + wave;
+        const targetZ = followsOrb ? bases[o + 2] * 0.045 : bases[o + 2] + directions[o + 2] * heartSpread;
+        array[o] = THREE.MathUtils.lerp(array[o], targetX, followsOrb ? 0.14 : 0.075);
+        array[o + 1] = THREE.MathUtils.lerp(array[o + 1], targetY, followsOrb ? 0.14 : 0.075);
+        array[o + 2] = THREE.MathUtils.lerp(array[o + 2], targetZ, followsOrb ? 0.14 : 0.075);
       }
       geometry.attributes.position.needsUpdate = true;
       heart.rotation.y = THREE.MathUtils.lerp(heart.rotation.y, handTargetRef.current.x, 0.055) + 0.0014;
@@ -288,8 +290,11 @@ export default function GestureBirthdayIntro({ onDone }) {
       )}
       {revealed && (
         <div className="particle-birthday">
-          <p>25 · 09 · 2026</p><h1>Happy Birthday</h1><h2>稼晖</h2>
-          <span>愿你的每一岁，都有新的星辰与惊喜。</span>
+          <div className="birthday-burst" aria-hidden="true">✦</div>
+          <p>25 · 09 · 2026</p>
+          <h1>Happy Birthday, 稼晖</h1>
+          <h2>愿你的每一岁，都有新的星辰与惊喜。</h2>
+          <span>— N ❤️ H</span>
           <button className="gesture-primary" onClick={completeIntro}>进入我们的宇宙</button>
         </div>
       )}
