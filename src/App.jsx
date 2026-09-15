@@ -16,6 +16,7 @@ import LettersModule from './components/letters/LettersModule';
 import LettersIcon from './components/letters/LettersIcon';
 import MusicPlayer from './components/MusicPlayer';
 import AnniversaryOrbit from './components/AnniversaryOrbit';
+import GestureBirthdayIntro from './components/GestureBirthdayIntro';
 
 export default function App() {
   const [page, setPage] = useState('home');
@@ -23,6 +24,9 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState('anniversary');
   const [showMobileNotice, setShowMobileNotice] = useState(window.innerWidth < 768);
+  const [showBirthdayIntro, setShowBirthdayIntro] = useState(
+    () => sessionStorage.getItem('nh-birthday-intro-seen') !== 'true'
+  );
 
   useEffect(() => {
     const handleResize = () => {
@@ -94,6 +98,7 @@ export default function App() {
   return (
     <EnergyProvider>
         <div style={{ width: '100%', height: '100%', margin: 0, padding: 0 }}>
+          {showBirthdayIntro && <GestureBirthdayIntro onDone={() => setShowBirthdayIntro(false)} />}
           {/* Mobile Notice Modal */}
           {showMobileNotice && isMobile && (
             <div style={{
