@@ -21,7 +21,7 @@ export default function App() {
   const [page, setPage] = useState('home');
   const [selectedCity, setSelectedCity] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [activeTab, setActiveTab] = useState(window.innerWidth < 768 ? 'towhere' : 'keywords');
+  const [activeTab, setActiveTab] = useState('anniversary');
   const [showMobileNotice, setShowMobileNotice] = useState(window.innerWidth < 768);
 
   useEffect(() => {
