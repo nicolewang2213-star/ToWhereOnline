@@ -15,6 +15,7 @@ import HeroSection from './components/HeroSection';
 import LettersModule from './components/letters/LettersModule';
 import LettersIcon from './components/letters/LettersIcon';
 import MusicPlayer from './components/MusicPlayer';
+import AnniversaryOrbit from './components/AnniversaryOrbit';
 
 export default function App() {
   const [page, setPage] = useState('home');
@@ -51,7 +52,7 @@ export default function App() {
     // 2. Handle Hash for tabs
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      if (['keywords', 'towhere', 'breaking', 'letters'].includes(hash)) {
+      if (['keywords', 'towhere', 'breaking', 'anniversary', 'letters'].includes(hash)) {
         // Prevent keyboards on mobile
         if (isMobile && hash === 'keywords') {
           setTabWithHash('towhere');
@@ -228,6 +229,7 @@ export default function App() {
                 )}
                 {activeTab === 'towhere' && <PinkAnimationHome goTo={goTo} goToCity={goToCity} isCityMode={page === 'city'} isMobile={isMobile} />}
                 {activeTab === 'breaking' && <FirstsTimeline />}
+                {activeTab === 'anniversary' && <AnniversaryOrbit />}
                 {activeTab === 'letters' && !isMobile && <LettersModule />}
               </div>
               {activeTab === 'keywords' && !isMobile && (
