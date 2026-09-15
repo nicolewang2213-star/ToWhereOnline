@@ -551,3 +551,118 @@ button:active {
   .gesture-space, .gesture-space::before, .gesture-space::after,
   .gesture-star, .gesture-scan, .birthday-burst { animation: none; }
 }
+
+/* Full-screen Gemini-style particle interaction */
+.gesture-intro.particle-version {
+  padding: 0;
+  background: #02030d;
+}
+
+.gesture-particle-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.gesture-particle-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The camera is used only as a local hand-tracking source; its picture stays hidden. */
+.gesture-camera-source {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.particle-welcome,
+.particle-error,
+.particle-birthday {
+  position: relative;
+  z-index: 2;
+  width: min(620px, calc(100% - 36px));
+  padding: 32px;
+  border-radius: 28px;
+  background: radial-gradient(circle at 50% 40%, rgba(10, 13, 43, .46), rgba(2, 3, 13, .12) 70%, transparent);
+  text-align: center;
+}
+
+.particle-welcome > p,
+.particle-birthday > p {
+  margin: 0 0 18px;
+  color: rgba(196, 210, 255, .74);
+  font-size: 12px;
+  letter-spacing: .26em;
+}
+
+.particle-welcome h1 {
+  margin: 0 0 28px;
+  font-size: clamp(34px, 6vw, 68px);
+  font-weight: 400;
+  letter-spacing: .06em;
+  text-shadow: 0 0 38px rgba(154, 179, 255, .48);
+}
+
+.particle-hint,
+.particle-controls {
+  position: fixed;
+  z-index: 3;
+  left: 50%;
+  bottom: 7vh;
+  transform: translateX(-50%);
+  width: min(520px, calc(100% - 40px));
+  margin: 0;
+  color: rgba(255,255,255,.72);
+  text-align: center;
+  letter-spacing: .08em;
+}
+
+.particle-controls p { margin: 10px 0 0; font-size: 14px; }
+.camera-live { display: inline-flex; align-items: center; gap: 8px; color: rgba(187,204,255,.68); font-size: 10px; letter-spacing: .2em; }
+.camera-live i { width: 6px; height: 6px; border-radius: 50%; background: #ff799f; box-shadow: 0 0 14px #ff799f; animation: gesturePulse 1.8s ease-in-out infinite; }
+
+.particle-birthday {
+  animation: particleBirthdayIn 1.2s cubic-bezier(.16,1,.3,1) both;
+}
+
+.particle-birthday h1 {
+  margin: 0;
+  color: #fff7dc;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(48px, 9vw, 104px);
+  font-weight: 400;
+  line-height: 1;
+  text-shadow: 0 0 46px rgba(255, 217, 137, .42);
+}
+
+.particle-birthday h2 {
+  margin: 12px 0 22px;
+  color: #ffc2d9;
+  font-size: clamp(30px, 5vw, 56px);
+  font-weight: 400;
+  letter-spacing: .18em;
+  text-shadow: 0 0 30px rgba(255, 121, 183, .42);
+}
+
+.particle-birthday span {
+  display: block;
+  margin: 0 0 30px;
+  color: rgba(255,255,255,.82);
+  font-size: 17px;
+  letter-spacing: .06em;
+}
+
+.particle-error p { margin: 0 0 20px; color: #ffd0da; }
+
+@keyframes particleBirthdayIn {
+  from { opacity: 0; transform: scale(.86); filter: blur(12px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+@media (max-width: 600px) {
+  .particle-welcome, .particle-error, .particle-birthday { padding: 24px 16px; }
+  .particle-birthday span { font-size: 15px; line-height: 1.7; }
+}
