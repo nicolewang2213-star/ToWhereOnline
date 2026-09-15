@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
     "@react-three/drei": "^9.88.6",
     "@react-three/fiber": "^8.13.7",
     "@supabase/supabase-js": "^2.90.1",
