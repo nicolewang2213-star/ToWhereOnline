@@ -69,12 +69,10 @@ export default function GestureBirthdayIntro({ onDone }) {
     const camera = new THREE.PerspectiveCamera(52, host.clientWidth / host.clientHeight, 0.1, 100);
     camera.position.z = 6.2;
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.25));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(host.clientWidth, host.clientHeight);
-    renderer.setClearColor(0x010207, 1);
+    renderer.setClearColor(0x02030d, 1);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.12;
     host.appendChild(renderer.domElement);
 
     const geometry = new THREE.BufferGeometry();
@@ -82,7 +80,7 @@ export default function GestureBirthdayIntro({ onDone }) {
     const bases = new Float32Array(PARTICLE_COUNT * 3);
     const directions = new Float32Array(PARTICLE_COUNT * 3);
     const colors = new Float32Array(PARTICLE_COUNT * 3);
-    const palette = [new THREE.Color('#fffaf0'), new THREE.Color('#e9d3a8'), new THREE.Color('#bac8e8'), new THREE.Color('#f3e8d2')];
+    const palette = [new THREE.Color('#ff79b7'), new THREE.Color('#ffd88f'), new THREE.Color('#8fbcff'), new THREE.Color('#d8a8ff')];
     for (let i = 0; i < PARTICLE_COUNT; i += 1) {
       const p = createHeartPoint(i);
       const offset = i * 3;
@@ -97,7 +95,7 @@ export default function GestureBirthdayIntro({ onDone }) {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     const material = new THREE.PointsMaterial({
-      size: 0.052, map: makeParticleTexture(), transparent: true, opacity: 0.92,
+      size: 0.075, map: makeParticleTexture(), transparent: true, opacity: 0.96,
       vertexColors: true, depthWrite: false, blending: THREE.AdditiveBlending,
     });
     const heart = new THREE.Points(geometry, material);
@@ -276,7 +274,7 @@ export default function GestureBirthdayIntro({ onDone }) {
       {cameraState === 'idle' && !revealed && (
         <div className="particle-welcome">
           <p>N &amp; H · A GIFT FROM THE UNIVERSE</p>
-          <h1>There is something<br />waiting in the dark.</h1>
+          <h1>把星辰握在掌心</h1>
           <button className="gesture-primary" onClick={startCamera}>开启手势宇宙</button>
         </div>
       )}
