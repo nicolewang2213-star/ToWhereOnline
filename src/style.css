@@ -687,6 +687,44 @@ button:active {
 .particle-target::after { inset: 16px; border-color: rgba(255, 183, 218, .2); animation-direction: reverse; animation-duration: 5s; }
 .particle-target.is-armed { border-color: rgba(255,224,158,.85); box-shadow: 0 0 90px rgba(255,193,220,.42), inset 0 0 36px rgba(180,201,255,.18); transform: translate(-50%, -50%) scale(1.12); }
 
+.gesture-star-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.gesture-star-stage i,
+.gesture-star-stage b {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.2);
+  background: #fff9df;
+  box-shadow:
+    0 0 12px 5px #fff,
+    0 0 38px 16px rgba(255, 216, 139, .82),
+    0 0 90px 35px rgba(165, 174, 255, .48);
+  transition: left 1s cubic-bezier(.16,1,.3,1), opacity .7s ease, transform 1s cubic-bezier(.16,1,.3,1);
+  animation: stageStarShimmer 1.8s ease-in-out infinite alternate;
+}
+
+.stage-star-left { left: 28%; }
+.stage-star-right { left: 72%; }
+.gesture-star-stage.swipeRight .stage-star-left,
+.gesture-star-stage.closeStars i { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.gesture-star-stage.finalOpen i { left: 50%; opacity: .12; transform: translate(-50%, -50%) scale(.35); }
+.gesture-star-stage b { left: 50%; width: 34px; height: 34px; }
+.gesture-star-stage.finalOpen b { opacity: 1; transform: translate(-50%, -50%) scale(1.25); box-shadow: 0 0 20px 8px #fff, 0 0 70px 30px rgba(255,206,119,.9), 0 0 160px 68px rgba(178,151,255,.55); }
+.gesture-star-stage.birthdayBurst b { opacity: 0; transform: translate(-50%, -50%) scale(9); transition-duration: 1s; }
+
+@keyframes stageStarShimmer {
+  to { filter: brightness(1.3); box-shadow: 0 0 18px 7px #fff, 0 0 52px 20px rgba(255,190,219,.85), 0 0 110px 42px rgba(119,161,255,.52); }
+}
+
 .particle-birthday {
   animation: particleBirthdayIn 1.2s cubic-bezier(.16,1,.3,1) both;
 }
