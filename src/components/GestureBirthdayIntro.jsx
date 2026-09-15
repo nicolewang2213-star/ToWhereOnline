@@ -54,8 +54,10 @@ export default function GestureBirthdayIntro({ onDone }) {
   const handTargetRef = useRef({ x: 0, y: 0 });
   const pinchFramesRef = useRef(0);
   const revealedRef = useRef(false);
+  const interactionRef = useRef({ mode: 'free', x: 0, y: 0 });
   const [cameraState, setCameraState] = useState('idle');
-  const [gestureText, setGestureText] = useState('握拳聚拢 · 张手散开 · 捏合开启');
+  const [interactionPhase, setInteractionPhase] = useState('free');
+  const [gestureText, setGestureText] = useState('捏住一颗星辰');
   const [revealed, setRevealed] = useState(false);
   const [error, setError] = useState('');
 
@@ -67,9 +69,12 @@ export default function GestureBirthdayIntro({ onDone }) {
     const camera = new THREE.PerspectiveCamera(52, host.clientWidth / host.clientHeight, 0.1, 100);
     camera.position.z = 6.2;
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.25));
     renderer.setSize(host.clientWidth, host.clientHeight);
-    renderer.setClearColor(0x02030d, 1);
+    renderer.setClearColor(0x010207, 1);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
     host.appendChild(renderer.domElement);
 
     const geometry = new THREE.BufferGeometry();
@@ -77,7 +82,7 @@ export default function GestureBirthdayIntro({ onDone }) {
     const bases = new Float32Array(PARTICLE_COUNT * 3);
     const directions = new Float32Array(PARTICLE_COUNT * 3);
     const colors = new Float32Array(PARTICLE_COUNT * 3);
-    const palette = [new THREE.Color('#ff79b7'), new THREE.Color('#ffd88f'), new THREE.Color('#8fbcff'), new THREE.Color('#d8a8ff')];
+    const palette = [new THREE.Color('#fffaf0'), new THREE.Color('#e9d3a8'), new THREE.Color('#bac8e8'), new THREE.Color('#f3e8d2')];
     for (let i = 0; i < PARTICLE_COUNT; i += 1) {
       const p = createHeartPoint(i);
       const offset = i * 3;
@@ -92,7 +97,7 @@ export default function GestureBirthdayIntro({ onDone }) {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     const material = new THREE.PointsMaterial({
-      size: 0.075, map: makeParticleTexture(), transparent: true, opacity: 0.96,
+      size: 0.052, map: makeParticleTexture(), transparent: true, opacity: 0.92,
       vertexColors: true, depthWrite: false, blending: THREE.AdditiveBlending,
     });
     const heart = new THREE.Points(geometry, material);
@@ -110,6 +115,16 @@ export default function GestureBirthdayIntro({ onDone }) {
     const stars = new THREE.Points(starGeometry, new THREE.PointsMaterial({ color: 0x8da9ff, size: 0.025, transparent: true, opacity: 0.55 }));
     scene.add(stars);
 
+    const orb = new THREE.Mesh(
+      new THREE.SphereGeometry(0.115, 32, 32),
+      new THREE.MeshBasicMaterial({ color: 0xffedbd, transparent: true, opacity: 0.96 })
+    );
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeParticleTexture(), color: 0xffe2a2, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending }));
+    halo.scale.set(0.9, 0.9, 1);
+    orb.add(halo);
+    orb.visible = false;
+    scene.add(orb);
+
     let frame;
     let currentOpen = 0.08;
     const clock = new THREE.Clock();
@@ -117,17 +132,31 @@ export default function GestureBirthdayIntro({ onDone }) {
       const time = clock.getElapsedTime();
       currentOpen = THREE.MathUtils.lerp(currentOpen, opennessRef.current, 0.07);
       const array = geometry.attributes.position.array;
+      const interaction = interactionRef.current;
+      const gathering = interaction.mode === 'carrying' || interaction.mode === 'armed';
+      const bursting = interaction.mode === 'burst';
+      const orbX = interaction.mode === 'armed' ? 0 : interaction.x;
+      const orbY = interaction.mode === 'armed' ? 0 : interaction.y;
       for (let i = 0; i < PARTICLE_COUNT; i += 1) {
         const o = i * 3;
         const wave = Math.sin(time * 1.4 + i * 0.013) * 0.025;
-        array[o] = THREE.MathUtils.lerp(array[o], bases[o] + directions[o] * currentOpen + wave, 0.075);
-        array[o + 1] = THREE.MathUtils.lerp(array[o + 1], bases[o + 1] + directions[o + 1] * currentOpen + wave, 0.075);
-        array[o + 2] = THREE.MathUtils.lerp(array[o + 2], bases[o + 2] + directions[o + 2] * currentOpen, 0.075);
+        const targetX = gathering ? orbX + bases[o] * 0.12 + directions[o] * 0.025 : bases[o] + directions[o] * (bursting ? 3.2 : currentOpen) + wave;
+        const targetY = gathering ? orbY + bases[o + 1] * 0.12 + directions[o + 1] * 0.025 : bases[o + 1] + directions[o + 1] * (bursting ? 3.2 : currentOpen) + wave;
+        const targetZ = gathering ? bases[o + 2] * 0.12 : bases[o + 2] + directions[o + 2] * (bursting ? 3.2 : currentOpen);
+        array[o] = THREE.MathUtils.lerp(array[o], targetX, gathering ? 0.12 : 0.075);
+        array[o + 1] = THREE.MathUtils.lerp(array[o + 1], targetY, gathering ? 0.12 : 0.075);
+        array[o + 2] = THREE.MathUtils.lerp(array[o + 2], targetZ, gathering ? 0.12 : 0.075);
       }
       geometry.attributes.position.needsUpdate = true;
       heart.rotation.y = THREE.MathUtils.lerp(heart.rotation.y, handTargetRef.current.x, 0.055) + 0.0014;
       heart.rotation.x = THREE.MathUtils.lerp(heart.rotation.x, handTargetRef.current.y, 0.05);
       heart.scale.setScalar(1 + Math.sin(time * 1.7) * 0.018);
+      orb.visible = gathering;
+      if (gathering) {
+        orb.position.x = THREE.MathUtils.lerp(orb.position.x, orbX, 0.18);
+        orb.position.y = THREE.MathUtils.lerp(orb.position.y, orbY, 0.18);
+        orb.scale.setScalar(1 + Math.sin(time * 4) * 0.12);
+      }
       stars.rotation.y += 0.00018;
       renderer.render(scene, camera);
       frame = requestAnimationFrame(animate);
@@ -143,7 +172,7 @@ export default function GestureBirthdayIntro({ onDone }) {
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener('resize', resize);
-      geometry.dispose(); material.map?.dispose(); material.dispose();
+      geometry.dispose(); material.map?.dispose(); material.dispose(); orb.geometry.dispose(); orb.material.dispose(); halo.material.map?.dispose(); halo.material.dispose();
       starGeometry.dispose(); stars.material.dispose(); renderer.dispose(); renderer.domElement.remove();
     };
   }, []);
@@ -162,6 +191,11 @@ export default function GestureBirthdayIntro({ onDone }) {
     revealedRef.current = true;
     opennessRef.current = 0.28;
     setRevealed(true);
+  };
+
+  const setMode = (mode) => {
+    interactionRef.current.mode = mode;
+    setInteractionPhase(mode);
   };
 
   const startCamera = async () => {
@@ -190,11 +224,33 @@ export default function GestureBirthdayIntro({ onDone }) {
           const result = landmarkerRef.current.detectForVideo(video, performance.now());
           const gesture = readGesture(result.landmarks?.[0]);
           if (gesture) {
-            opennessRef.current = gesture.openness * 1.15;
+            const mode = interactionRef.current.mode;
+            opennessRef.current = gesture.openness * 0.95;
             handTargetRef.current = { x: (gesture.x - 0.5) * 1.55, y: (gesture.y - 0.5) * 0.75 };
             pinchFramesRef.current = gesture.pinch ? pinchFramesRef.current + 1 : Math.max(0, pinchFramesRef.current - 2);
-            if (pinchFramesRef.current > 9 && !revealedRef.current) revealBirthday();
-            setGestureText(gesture.pinch ? '保持捏合，开启生日星光' : gesture.openness > 0.62 ? '星辰正在你的掌心绽放' : '握拳聚拢 · 张手散开 · 捏合开启');
+            interactionRef.current.x = (gesture.x - 0.5) * 5.5;
+            interactionRef.current.y = (0.5 - gesture.y) * 3.5;
+
+            if (mode === 'free' && pinchFramesRef.current > 7) {
+              setMode('carrying');
+              setGestureText('保持捏合，把光球移入中央光环');
+            } else if (mode === 'carrying' && gesture.pinch) {
+              const centreDistance = Math.hypot(gesture.x - 0.5, gesture.y - 0.5);
+              if (centreDistance < 0.14) {
+                setMode('armed');
+                setGestureText('很好，现在张开手掌');
+              }
+            } else if (mode === 'carrying' && !gesture.pinch && pinchFramesRef.current === 0) {
+              setMode('free');
+              setGestureText('再捏住一颗星辰');
+            } else if (mode === 'armed' && !gesture.pinch && gesture.openness > 0.58) {
+              setMode('burst');
+              opennessRef.current = 3.2;
+              setGestureText('生日星光已被唤醒');
+              window.setTimeout(revealBirthday, 1050);
+            } else if (mode === 'free') {
+              setGestureText(gesture.openness > 0.62 ? '先用拇指与食指捏住星光' : '捏住一颗星辰');
+            }
           } else setGestureText('把一只手放入镜头范围');
         }
         detectionFrameRef.current = requestAnimationFrame(detect);
@@ -220,17 +276,17 @@ export default function GestureBirthdayIntro({ onDone }) {
       {cameraState === 'idle' && !revealed && (
         <div className="particle-welcome">
           <p>N &amp; H · A GIFT FROM THE UNIVERSE</p>
-          <h1>把星辰握在掌心</h1>
+          <h1>There is something<br />waiting in the dark.</h1>
           <button className="gesture-primary" onClick={startCamera}>开启手势宇宙</button>
-          <button className="gesture-skip" onClick={revealBirthday}>直接开启惊喜</button>
         </div>
       )}
       {cameraState === 'loading' && !revealed && <p className="particle-hint">正在连接星辰…</p>}
       {cameraState === 'tracking' && !revealed && (
-        <div className="particle-controls"><span className="camera-live"><i /> HAND TRACKING</span><p>{gestureText}</p></div>
+        <><div className={`particle-target ${interactionPhase === 'armed' ? 'is-armed' : ''}`} aria-hidden="true" />
+        <div className="particle-controls"><span className="camera-live"><i /> GESTURE ACTIVE</span><p>{gestureText}</p></div></>
       )}
       {cameraState === 'error' && !revealed && (
-        <div className="particle-error"><p>{error}</p><button className="gesture-primary" onClick={startCamera}>重新尝试</button><button className="gesture-skip" onClick={revealBirthday}>直接开启惊喜</button></div>
+        <div className="particle-error"><p>{error}</p><button className="gesture-primary" onClick={startCamera}>重新尝试</button></div>
       )}
       {revealed && (
         <div className="particle-birthday">
