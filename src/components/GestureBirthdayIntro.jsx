@@ -13,7 +13,7 @@ function readGesture(landmarks) {
   if (!landmarks) return null;
   const palmSize = Math.max(distance(landmarks[0], landmarks[9]), 0.06);
   const extended = [[8, 6], [12, 10], [16, 14], [20, 18]]
-    .filter(([tip, joint]) => distance(landmarks[tip], landmarks[0]) > distance(landmarks[joint], landmarks[0]) * 1.18).length;
+    .filter(([tip, joint]) => distance(landmarks[tip], landmarks[0]) > distance(landmarks[joint], landmarks[0]) * 1.1).length;
   return {
     openness: THREE.MathUtils.clamp((extended - 0.4) / 3.4, 0, 1),
     pinch: distance(landmarks[4], landmarks[8]) / palmSize < 0.43,
@@ -55,10 +55,11 @@ export default function GestureBirthdayIntro({ onDone }) {
   const musicNodesRef = useRef([]);
   const opennessRef = useRef(0.08);
   const handTargetRef = useRef({ x: 0, y: 0 });
+  const smoothedGestureRef = useRef({ x: null, openness: 0 });
   const lastHandXRef = useRef(null);
   const rotationRef = useRef(0);
   const gestureFramesRef = useRef(0);
-  const swipeRef = useRef({ zone: 'center', passes: 0 });
+  const swipeRef = useRef({ zone: 'center', passes: 0, lastPassAt: 0 });
   const revealedRef = useRef(false);
   const phaseRef = useRef('openHeart');
   const interactionRef = useRef({ mode: 'heart', starCount: 0 });
@@ -324,57 +325,71 @@ export default function GestureBirthdayIntro({ onDone }) {
       await video.play();
       setCameraState('tracking');
       let lastTime = -1;
+      let lastDetectionAt = 0;
       const detect = () => {
         if (!landmarkerRef.current || !videoRef.current) return;
-        if (video.currentTime !== lastTime) {
+        const now = performance.now();
+        if (video.currentTime !== lastTime && now - lastDetectionAt >= 34) {
           lastTime = video.currentTime;
-          const result = landmarkerRef.current.detectForVideo(video, performance.now());
+          lastDetectionAt = now;
+          const result = landmarkerRef.current.detectForVideo(video, now);
           const gesture = readGesture(result.landmarks?.[0]);
           if (gesture) {
+            const previous = smoothedGestureRef.current;
+            const smoothX = previous.x === null ? gesture.x : THREE.MathUtils.lerp(previous.x, gesture.x, 0.48);
+            const smoothOpen = THREE.MathUtils.lerp(previous.openness, gesture.openness, 0.52);
+            smoothedGestureRef.current = { x: smoothX, openness: smoothOpen };
             const phase = phaseRef.current;
-            if (revealedRef.current) opennessRef.current = gesture.openness * 0.92;
-            else if (phase === 'openHeart') opennessRef.current = gesture.openness * 1.1;
+            if (revealedRef.current) opennessRef.current = smoothOpen * 0.92;
+            else if (phase === 'openHeart') opennessRef.current = smoothOpen * 1.1;
             if (lastHandXRef.current !== null) {
-              const handDelta = THREE.MathUtils.clamp(gesture.x - lastHandXRef.current, -0.12, 0.12);
+              const handDelta = THREE.MathUtils.clamp(smoothX - lastHandXRef.current, -0.12, 0.12);
               rotationRef.current += handDelta * 4.8;
             }
-            lastHandXRef.current = gesture.x;
+            lastHandXRef.current = smoothX;
             handTargetRef.current = { x: rotationRef.current, y: (gesture.y - 0.5) * 0.75 };
 
             if (revealedRef.current) {
-              setGestureText(gesture.openness > 0.6 ? '星光随你散开' : '爱心正在重新聚拢');
+              setGestureText(smoothOpen > 0.5 ? '星光随你散开' : '爱心正在重新聚拢');
             } else if (phase === 'openHeart') {
-              gestureFramesRef.current = gesture.openness > 0.68 ? gestureFramesRef.current + 1 : 0;
-              if (gestureFramesRef.current > 7) {
-                swipeRef.current = { zone: 'center', passes: 0 };
+              gestureFramesRef.current = smoothOpen > 0.55
+                ? gestureFramesRef.current + 1
+                : Math.max(0, gestureFramesRef.current - 1);
+              if (gestureFramesRef.current > 3) {
+                swipeRef.current = { zone: 'center', passes: 0, lastPassAt: 0 };
                 setPhase('searchStars', 'search');
                 opennessRef.current = 1.25;
                 setGestureText('左右慢慢翻动星海，寻找隐藏的星光');
               }
             } else if (phase === 'searchStars') {
-              const zone = gesture.x < 0.34 ? 'left' : (gesture.x > 0.66 ? 'right' : 'center');
+              const zone = smoothX < 0.42 ? 'left' : (smoothX > 0.58 ? 'right' : 'center');
               const swipe = swipeRef.current;
-              if ((zone === 'left' || zone === 'right') && zone !== swipe.zone) {
+              if ((zone === 'left' || zone === 'right') && zone !== swipe.zone && now - swipe.lastPassAt > 180) {
                 if (swipe.zone === 'left' || swipe.zone === 'right') swipe.passes += 1;
                 swipe.zone = zone;
-                if (swipe.passes === 3) {
+                swipe.lastPassAt = now;
+                if (swipe.passes === 2) {
                   interactionRef.current.starCount = 1;
                   setGestureText('找到第一颗了，继续左右翻动');
-                } else if (swipe.passes >= 6) {
+                } else if (swipe.passes >= 4) {
                   interactionRef.current.starCount = 2;
                   setPhase('closeStars', 'search');
                   setGestureText('两颗星都找到了，请慢慢闭合手掌');
                 }
               }
             } else if (phase === 'closeStars') {
-              gestureFramesRef.current = gesture.openness < 0.2 ? gestureFramesRef.current + 1 : 0;
-              if (gestureFramesRef.current > 7) {
+              gestureFramesRef.current = smoothOpen < 0.34
+                ? gestureFramesRef.current + 1
+                : Math.max(0, gestureFramesRef.current - 1);
+              if (gestureFramesRef.current > 3) {
                 setPhase('finalOpen', 'gather');
                 setGestureText('最后一次张开手掌');
               }
             } else if (phase === 'finalOpen') {
-              gestureFramesRef.current = gesture.openness > 0.68 ? gestureFramesRef.current + 1 : 0;
-              if (gestureFramesRef.current > 7) {
+              gestureFramesRef.current = smoothOpen > 0.55
+                ? gestureFramesRef.current + 1
+                : Math.max(0, gestureFramesRef.current - 1);
+              if (gestureFramesRef.current > 3) {
                 setPhase('birthdayBurst', 'burst');
                 setGestureText('生日星光已被唤醒');
                 window.setTimeout(revealBirthday, 1600);
@@ -382,6 +397,7 @@ export default function GestureBirthdayIntro({ onDone }) {
             }
           } else {
             lastHandXRef.current = null;
+            smoothedGestureRef.current.x = null;
             setGestureText('把一只手放入镜头范围');
           }
         }
