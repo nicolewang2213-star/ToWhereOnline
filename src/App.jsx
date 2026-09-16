@@ -25,7 +25,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('anniversary');
   const [showMobileNotice, setShowMobileNotice] = useState(window.innerWidth < 768);
   const [showBirthdayIntro, setShowBirthdayIntro] = useState(
-    () => sessionStorage.getItem('nh-birthday-intro-seen') !== 'true'
+    () => localStorage.getItem('nh-birthday-quest-v1-complete') !== 'true'
   );
 
   useEffect(() => {
