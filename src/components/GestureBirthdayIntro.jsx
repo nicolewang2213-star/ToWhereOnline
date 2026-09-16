@@ -50,6 +50,9 @@ export default function GestureBirthdayIntro({ onDone }) {
   const streamRef = useRef(null);
   const landmarkerRef = useRef(null);
   const detectionFrameRef = useRef(null);
+  const musicContextRef = useRef(null);
+  const musicTimerRef = useRef(null);
+  const musicNodesRef = useRef([]);
   const opennessRef = useRef(0.08);
   const handTargetRef = useRef({ x: 0, y: 0 });
   const lastHandXRef = useRef(null);
@@ -64,6 +67,7 @@ export default function GestureBirthdayIntro({ onDone }) {
   const [gestureText, setGestureText] = useState('慢慢张开手掌');
   const [revealed, setRevealed] = useState(false);
   const [error, setError] = useState('');
+  const [musicPlaying, setMusicPlaying] = useState(false);
 
   useEffect(() => {
     const host = canvasHostRef.current;
@@ -226,6 +230,64 @@ export default function GestureBirthdayIntro({ onDone }) {
 
   useEffect(() => stopCamera, []);
 
+  const stopBirthdayMusic = () => {
+    if (musicTimerRef.current) window.clearTimeout(musicTimerRef.current);
+    musicTimerRef.current = null;
+    musicNodesRef.current.forEach((node) => {
+      try { node.stop(); } catch { /* already stopped */ }
+    });
+    musicNodesRef.current = [];
+    setMusicPlaying(false);
+  };
+
+  const startBirthdayMusic = () => {
+    stopBirthdayMusic();
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    if (!musicContextRef.current) musicContextRef.current = new AudioContext();
+    const context = musicContextRef.current;
+    context.resume();
+    const notes = [
+      ['G4', .38], ['G4', .22], ['A4', .62], ['G4', .62], ['C5', .62], ['B4', 1.05],
+      ['G4', .38], ['G4', .22], ['A4', .62], ['G4', .62], ['D5', .62], ['C5', 1.05],
+      ['G4', .38], ['G4', .22], ['G5', .62], ['E5', .62], ['C5', .62], ['B4', .62], ['A4', 1.05],
+      ['F5', .38], ['F5', .22], ['E5', .62], ['C5', .62], ['D5', .62], ['C5', 1.15],
+    ];
+    const frequencies = { G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99 };
+
+    const schedule = () => {
+      let cursor = context.currentTime + 0.12;
+      const master = context.createGain();
+      master.gain.value = 0.19;
+      master.connect(context.destination);
+      notes.forEach(([note, duration]) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = frequencies[note];
+        gain.gain.setValueAtTime(0.0001, cursor);
+        gain.gain.exponentialRampToValueAtTime(0.38, cursor + 0.035);
+        gain.gain.exponentialRampToValueAtTime(0.0001, cursor + duration * 0.92);
+        oscillator.connect(gain);
+        gain.connect(master);
+        oscillator.start(cursor);
+        oscillator.stop(cursor + duration);
+        musicNodesRef.current.push(oscillator);
+        cursor += duration;
+      });
+      const loopDelay = Math.max(1000, (cursor - context.currentTime + 1.3) * 1000);
+      musicTimerRef.current = window.setTimeout(schedule, loopDelay);
+    };
+    schedule();
+    setMusicPlaying(true);
+  };
+
+  useEffect(() => () => {
+    if (musicTimerRef.current) window.clearTimeout(musicTimerRef.current);
+    musicNodesRef.current.forEach((node) => { try { node.stop(); } catch { /* already stopped */ } });
+    musicContextRef.current?.close?.();
+  }, []);
+
   const revealBirthday = () => {
     revealedRef.current = true;
     setRevealed(true);
@@ -245,6 +307,7 @@ export default function GestureBirthdayIntro({ onDone }) {
   const startCamera = async () => {
     setCameraState('loading');
     setError('');
+    startBirthdayMusic();
     try {
       const [{ FilesetResolver, HandLandmarker }, stream] = await Promise.all([
         import('@mediapipe/tasks-vision'),
@@ -334,6 +397,7 @@ export default function GestureBirthdayIntro({ onDone }) {
 
   const completeIntro = () => {
     stopCamera();
+    stopBirthdayMusic();
     sessionStorage.setItem('nh-birthday-intro-seen', 'true');
     onDone();
   };
@@ -342,6 +406,15 @@ export default function GestureBirthdayIntro({ onDone }) {
     <div className={`gesture-intro particle-version ${revealed ? 'is-revealed' : ''}`} role="dialog" aria-modal="true" aria-label="生日粒子宇宙">
       <div ref={canvasHostRef} className="gesture-particle-canvas" aria-hidden="true" />
       <video ref={videoRef} className="gesture-camera-source" playsInline muted />
+      <button
+        className={`birthday-music-toggle ${musicPlaying ? 'is-playing' : ''}`}
+        onClick={musicPlaying ? stopBirthdayMusic : startBirthdayMusic}
+        aria-label={musicPlaying ? '暂停生日音乐' : '播放生日音乐'}
+        title={musicPlaying ? '暂停生日音乐' : '播放生日音乐'}
+      >
+        <span>{musicPlaying ? '♫' : '♪'}</span>
+        <small>{musicPlaying ? '生日旋律' : '播放音乐'}</small>
+      </button>
       {cameraState === 'idle' && !revealed && (
         <div className="particle-welcome">
           <p>N &amp; H · A GIFT FROM THE UNIVERSE</p>
