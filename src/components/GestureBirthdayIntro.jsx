@@ -52,6 +52,8 @@ export default function GestureBirthdayIntro({ onDone }) {
   const detectionFrameRef = useRef(null);
   const opennessRef = useRef(0.08);
   const handTargetRef = useRef({ x: 0, y: 0 });
+  const lastHandXRef = useRef(null);
+  const rotationRef = useRef(0);
   const gestureFramesRef = useRef(0);
   const swipeRef = useRef({ zone: 'center', passes: 0 });
   const revealedRef = useRef(false);
@@ -269,7 +271,12 @@ export default function GestureBirthdayIntro({ onDone }) {
             const phase = phaseRef.current;
             if (revealedRef.current) opennessRef.current = gesture.openness * 0.92;
             else if (phase === 'openHeart') opennessRef.current = gesture.openness * 1.1;
-            handTargetRef.current = { x: (gesture.x - 0.5) * 1.55, y: (gesture.y - 0.5) * 0.75 };
+            if (lastHandXRef.current !== null) {
+              const handDelta = THREE.MathUtils.clamp(gesture.x - lastHandXRef.current, -0.12, 0.12);
+              rotationRef.current += handDelta * 4.8;
+            }
+            lastHandXRef.current = gesture.x;
+            handTargetRef.current = { x: rotationRef.current, y: (gesture.y - 0.5) * 0.75 };
 
             if (revealedRef.current) {
               setGestureText(gesture.openness > 0.6 ? '星光随你散开' : '爱心正在重新聚拢');
@@ -307,10 +314,13 @@ export default function GestureBirthdayIntro({ onDone }) {
               if (gestureFramesRef.current > 7) {
                 setPhase('birthdayBurst', 'burst');
                 setGestureText('生日星光已被唤醒');
-                window.setTimeout(revealBirthday, 2600);
+                window.setTimeout(revealBirthday, 1600);
               }
             }
-          } else setGestureText('把一只手放入镜头范围');
+          } else {
+            lastHandXRef.current = null;
+            setGestureText('把一只手放入镜头范围');
+          }
         }
         detectionFrameRef.current = requestAnimationFrame(detect);
       };
