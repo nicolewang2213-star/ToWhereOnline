@@ -53,6 +53,7 @@ export default function GestureBirthdayIntro({ onDone }) {
   const opennessRef = useRef(0.08);
   const handTargetRef = useRef({ x: 0, y: 0 });
   const gestureFramesRef = useRef(0);
+  const swipeRef = useRef({ zone: 'center', passes: 0 });
   const revealedRef = useRef(false);
   const phaseRef = useRef('openHeart');
   const interactionRef = useRef({ mode: 'heart', starCount: 0 });
@@ -80,6 +81,7 @@ export default function GestureBirthdayIntro({ onDone }) {
     const positions = new Float32Array(PARTICLE_COUNT * 3);
     const bases = new Float32Array(PARTICLE_COUNT * 3);
     const directions = new Float32Array(PARTICLE_COUNT * 3);
+    const starTargets = new Float32Array(PARTICLE_COUNT * 3);
     const colors = new Float32Array(PARTICLE_COUNT * 3);
     const palette = [new THREE.Color('#ff79b7'), new THREE.Color('#ffd88f'), new THREE.Color('#8fbcff'), new THREE.Color('#d8a8ff')];
     for (let i = 0; i < PARTICLE_COUNT; i += 1) {
@@ -90,6 +92,10 @@ export default function GestureBirthdayIntro({ onDone }) {
       const direction = new THREE.Vector3((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 1.5)
         .normalize().multiplyScalar(1.6 + Math.random() * 3.5);
       directions.set([direction.x, direction.y, direction.z], offset);
+      const starAngle = Math.random() * Math.PI * 2;
+      const starRay = Math.pow((Math.cos(starAngle * 5) + 1) / 2, 5);
+      const starRadius = (0.16 + starRay * 0.42) * Math.sqrt(Math.random());
+      starTargets.set([Math.cos(starAngle) * starRadius, Math.sin(starAngle) * starRadius, (Math.random() - 0.5) * 0.12], offset);
       const color = palette[Math.floor(Math.random() * palette.length)].clone().multiplyScalar(0.72 + Math.random() * 0.4);
       colors.set([color.r, color.g, color.b], offset);
     }
@@ -125,7 +131,7 @@ export default function GestureBirthdayIntro({ onDone }) {
     scene.add(orb);
 
     const searchStarTexture = makeParticleTexture();
-    const searchStarLeft = new THREE.Sprite(new THREE.SpriteMaterial({ map: searchStarTexture, color: 0xffefb5, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const searchStarLeft = new THREE.Sprite(new THREE.SpriteMaterial({ map: searchStarTexture, color: 0xffb9dc, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
     const searchStarRight = new THREE.Sprite(new THREE.SpriteMaterial({ map: searchStarTexture, color: 0xbad8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
     searchStarLeft.scale.set(0.82, 0.82, 1);
     searchStarRight.scale.set(0.82, 0.82, 1);
@@ -153,9 +159,9 @@ export default function GestureBirthdayIntro({ onDone }) {
           targetZ = bases[o + 2] * 0.22 + directions[o + 2] * 1.48;
         } else if (isGather) {
           const staysBehind = i % 6 === 0;
-          targetX = staysBehind ? bases[o] * 0.2 + directions[o] * 1.42 : directions[o] * 0.2 + wave;
-          targetY = staysBehind ? bases[o + 1] * 0.2 + directions[o + 1] * 1.42 : directions[o + 1] * 0.2 + wave;
-          targetZ = staysBehind ? bases[o + 2] * 0.2 + directions[o + 2] * 1.42 : directions[o + 2] * 0.16;
+          targetX = staysBehind ? bases[o] * 0.2 + directions[o] * 1.42 : starTargets[o] + wave;
+          targetY = staysBehind ? bases[o + 1] * 0.2 + directions[o + 1] * 1.42 : starTargets[o + 1] + wave;
+          targetZ = staysBehind ? bases[o + 2] * 0.2 + directions[o + 2] * 1.42 : starTargets[o + 2];
         } else if (interaction.mode === 'burst') {
           targetX = directions[o] * 3.6 + wave;
           targetY = directions[o + 1] * 3.6 + wave;
@@ -165,7 +171,7 @@ export default function GestureBirthdayIntro({ onDone }) {
           targetY = bases[o + 1] + directions[o + 1] * currentOpen + wave;
           targetZ = bases[o + 2] + directions[o + 2] * currentOpen;
         }
-        const speed = isSearch ? 0.045 : (isGather ? 0.055 : (interaction.mode === 'reveal' ? 0.028 : 0.075));
+        const speed = isSearch ? 0.038 : (isGather ? 0.048 : (interaction.mode === 'burst' ? 0.026 : (interaction.mode === 'reveal' ? 0.022 : 0.075)));
         array[o] = THREE.MathUtils.lerp(array[o], targetX, speed);
         array[o + 1] = THREE.MathUtils.lerp(array[o + 1], targetY, speed);
         array[o + 2] = THREE.MathUtils.lerp(array[o + 2], targetZ, speed);
@@ -174,15 +180,16 @@ export default function GestureBirthdayIntro({ onDone }) {
       heart.rotation.y = THREE.MathUtils.lerp(heart.rotation.y, handTargetRef.current.x, 0.055) + 0.0014;
       heart.rotation.x = THREE.MathUtils.lerp(heart.rotation.x, handTargetRef.current.y, 0.05);
       heart.scale.setScalar(1 + Math.sin(time * 1.7) * 0.018);
-      orb.visible = isGather;
-      if (isGather) orb.scale.setScalar(1.25 + Math.sin(time * 4) * 0.13);
+      orb.visible = false;
       const searchRotation = handTargetRef.current.x * 1.85;
       const leftAngle = -1.18 + searchRotation;
       const rightAngle = 1.18 + searchRotation;
       searchStarLeft.position.set(Math.sin(leftAngle) * 2.15, -0.22, Math.cos(leftAngle) * 1.35);
       searchStarRight.position.set(Math.sin(rightAngle) * 2.15, 0.28, Math.cos(rightAngle) * 1.35);
-      searchStarLeft.material.opacity = isSearch ? THREE.MathUtils.clamp((searchStarLeft.position.z + 1.35) / 2.7, 0.08, 0.96) : 0;
-      searchStarRight.material.opacity = isSearch ? THREE.MathUtils.clamp((searchStarRight.position.z + 1.35) / 2.7, 0.08, 0.96) : 0;
+      const leftDepth = THREE.MathUtils.clamp((searchStarLeft.position.z + 1.35) / 2.7, 0.08, 0.96);
+      const rightDepth = THREE.MathUtils.clamp((searchStarRight.position.z + 1.35) / 2.7, 0.08, 0.96);
+      searchStarLeft.material.opacity = isSearch && interaction.starCount >= 1 ? leftDepth : 0;
+      searchStarRight.material.opacity = isSearch && interaction.starCount >= 2 ? rightDepth : 0;
       const starPulse = 0.82 + Math.sin(time * 3.5) * 0.1;
       searchStarLeft.scale.set(starPulse, starPulse, 1);
       searchStarRight.scale.set(starPulse, starPulse, 1);
@@ -269,21 +276,25 @@ export default function GestureBirthdayIntro({ onDone }) {
             } else if (phase === 'openHeart') {
               gestureFramesRef.current = gesture.openness > 0.68 ? gestureFramesRef.current + 1 : 0;
               if (gestureFramesRef.current > 7) {
-                setPhase('swipeLeft', 'search');
+                swipeRef.current = { zone: 'center', passes: 0 };
+                setPhase('searchStars', 'search');
                 opennessRef.current = 1.25;
-                setGestureText('向左滑动，唤醒第一颗星');
+                setGestureText('左右慢慢翻动星海，寻找隐藏的星光');
               }
-            } else if (phase === 'swipeLeft') {
-              gestureFramesRef.current = gesture.x < 0.34 ? gestureFramesRef.current + 1 : 0;
-              if (gestureFramesRef.current > 5) {
-                setPhase('swipeRight', 'search');
-                setGestureText('再向右滑动，唤醒第二颗星');
-              }
-            } else if (phase === 'swipeRight') {
-              gestureFramesRef.current = gesture.x > 0.66 ? gestureFramesRef.current + 1 : 0;
-              if (gestureFramesRef.current > 5) {
-                setPhase('closeStars', 'search');
-                setGestureText('慢慢握拳，让双星相遇');
+            } else if (phase === 'searchStars') {
+              const zone = gesture.x < 0.34 ? 'left' : (gesture.x > 0.66 ? 'right' : 'center');
+              const swipe = swipeRef.current;
+              if ((zone === 'left' || zone === 'right') && zone !== swipe.zone) {
+                if (swipe.zone === 'left' || swipe.zone === 'right') swipe.passes += 1;
+                swipe.zone = zone;
+                if (swipe.passes === 3) {
+                  interactionRef.current.starCount = 1;
+                  setGestureText('找到第一颗了，继续左右翻动');
+                } else if (swipe.passes >= 6) {
+                  interactionRef.current.starCount = 2;
+                  setPhase('closeStars', 'search');
+                  setGestureText('两颗星都找到了，请慢慢闭合手掌');
+                }
               }
             } else if (phase === 'closeStars') {
               gestureFramesRef.current = gesture.openness < 0.2 ? gestureFramesRef.current + 1 : 0;
@@ -296,7 +307,7 @@ export default function GestureBirthdayIntro({ onDone }) {
               if (gestureFramesRef.current > 7) {
                 setPhase('birthdayBurst', 'burst');
                 setGestureText('生日星光已被唤醒');
-                window.setTimeout(revealBirthday, 1000);
+                window.setTimeout(revealBirthday, 2600);
               }
             }
           } else setGestureText('把一只手放入镜头范围');
