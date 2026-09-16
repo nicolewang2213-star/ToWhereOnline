@@ -4,6 +4,40 @@ import * as THREE from 'three';
 const WASM_ROOT = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm';
 const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 const PARTICLE_COUNT = 7200;
+const QUEST_STORAGE_KEY = 'nh-birthday-quest-v1-stage';
+const QUEST_COMPLETE_KEY = 'nh-birthday-quest-v1-complete';
+
+const QUEST_STEPS = [
+  {
+    label: 'MISSION 01 · THE HIDDEN ROOM',
+    title: '房间里的秘密',
+    description: '你的第一条线索，就藏在这个房间里。仔细寻找它，找到那组只属于你的四位数字，才能打开下一章。',
+    code: '1989',
+  },
+  {
+    label: 'MISSION 02 · MORNING MESSAGE',
+    title: '清晨来信',
+    description: '今晚先好好睡一觉。醒来以后，去找 Nicole 领取第二条线索。拿到四位密码，再回来继续这段旅程。',
+    code: '0501',
+  },
+  {
+    label: 'MISSION 03 · BIRTHDAY DINNER',
+    title: '生日晚餐',
+    description: '去享用属于你的生日晚餐吧。第三条线索会在一个特别的时刻出现。找到密码，下一扇门就会为你打开。',
+    code: '0925',
+  },
+  {
+    label: 'FINAL MISSION · THE HIDDEN ENDING',
+    title: '隐藏彩蛋',
+    description: '你已经解锁了生日礼物，但故事还没有结束。参加最后一场彩蛋晚餐，找到最终密码，才能真正进入我们的宇宙。',
+    code: '2026',
+  },
+];
+
+function getSavedQuestStage() {
+  const saved = Number.parseInt(localStorage.getItem(QUEST_STORAGE_KEY) ?? '-1', 10);
+  return saved >= 0 && saved < QUEST_STEPS.length ? saved : -1;
+}
 
 function distance(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y, (a.z || 0) - (b.z || 0));
@@ -50,6 +84,7 @@ export default function GestureBirthdayIntro({ onDone }) {
   const streamRef = useRef(null);
   const landmarkerRef = useRef(null);
   const detectionFrameRef = useRef(null);
+  const questTimerRef = useRef(null);
   const musicContextRef = useRef(null);
   const musicTimerRef = useRef(null);
   const musicNodesRef = useRef([]);
@@ -60,13 +95,17 @@ export default function GestureBirthdayIntro({ onDone }) {
   const rotationRef = useRef(0);
   const gestureFramesRef = useRef(0);
   const swipeRef = useRef({ zone: 'center', passes: 0, lastPassAt: 0 });
-  const revealedRef = useRef(false);
+  const [questStage, setQuestStage] = useState(getSavedQuestStage);
+  const revealedRef = useRef(questStage >= 0);
   const phaseRef = useRef('openHeart');
   const interactionRef = useRef({ mode: 'heart', starCount: 0 });
   const [cameraState, setCameraState] = useState('idle');
   const [interactionPhase, setInteractionPhase] = useState('openHeart');
   const [gestureText, setGestureText] = useState('慢慢张开手掌');
-  const [revealed, setRevealed] = useState(false);
+  const [revealed, setRevealed] = useState(() => questStage >= 0);
+  const [questInput, setQuestInput] = useState('');
+  const [questError, setQuestError] = useState('');
+  const [questSuccess, setQuestSuccess] = useState(false);
   const [error, setError] = useState('');
   const [musicPlaying, setMusicPlaying] = useState(false);
 
@@ -330,6 +369,7 @@ export default function GestureBirthdayIntro({ onDone }) {
 
   useEffect(() => () => {
     if (musicTimerRef.current) window.clearTimeout(musicTimerRef.current);
+    if (questTimerRef.current) window.clearTimeout(questTimerRef.current);
     musicNodesRef.current.forEach((node) => { try { node.stop(); } catch { /* already stopped */ } });
     musicContextRef.current?.close?.();
   }, []);
@@ -459,8 +499,44 @@ export default function GestureBirthdayIntro({ onDone }) {
   const completeIntro = () => {
     stopCamera();
     stopBirthdayMusic();
+    localStorage.setItem(QUEST_COMPLETE_KEY, 'true');
+    localStorage.removeItem(QUEST_STORAGE_KEY);
     sessionStorage.setItem('nh-birthday-intro-seen', 'true');
     onDone();
+  };
+
+  const beginQuest = () => {
+    stopCamera();
+    interactionRef.current.mode = 'reveal';
+    opennessRef.current = 0.34;
+    localStorage.setItem(QUEST_STORAGE_KEY, '0');
+    setQuestStage(0);
+    setQuestInput('');
+    setQuestError('');
+  };
+
+  const handleQuestSubmit = (event) => {
+    event.preventDefault();
+    const currentStep = QUEST_STEPS[questStage];
+    if (!currentStep || questInput.trim() !== currentStep.code) {
+      setQuestError('星门没有回应。再想一想，这组四位数字藏在哪里？');
+      return;
+    }
+
+    setQuestError('');
+    setQuestSuccess(true);
+    if (questStage === QUEST_STEPS.length - 1) {
+      questTimerRef.current = window.setTimeout(completeIntro, 1300);
+      return;
+    }
+
+    questTimerRef.current = window.setTimeout(() => {
+      const nextStage = questStage + 1;
+      localStorage.setItem(QUEST_STORAGE_KEY, String(nextStage));
+      setQuestStage(nextStage);
+      setQuestInput('');
+      setQuestSuccess(false);
+    }, 900);
   };
 
   return (
@@ -501,15 +577,53 @@ export default function GestureBirthdayIntro({ onDone }) {
       {cameraState === 'error' && !revealed && (
         <div className="particle-error"><p>{error}</p><button className="gesture-primary" onClick={startCamera}>重新尝试</button></div>
       )}
-      {revealed && (
+      {revealed && questStage < 0 && (
         <div className="particle-birthday">
           <div className="birthday-burst" aria-hidden="true">✦</div>
           <p>25 · 09 · 2026</p>
           <h1>Happy Birthday, 稼晖</h1>
           <h2>愿你的每一岁，都有新的星辰与惊喜。</h2>
           <span>— N ❤️ H</span>
-          <button className="gesture-primary" onClick={completeIntro}>进入我们的宇宙</button>
+          <button className="gesture-primary" onClick={beginQuest}>开启生日任务</button>
         </div>
+      )}
+      {revealed && questStage >= 0 && (
+        <section className={`birthday-quest ${questSuccess ? 'is-unlocking' : ''}`} aria-live="polite">
+          <div className="quest-progress" aria-label={`生日任务进度：第 ${questStage + 1} 章，共 ${QUEST_STEPS.length} 章`}>
+            {QUEST_STEPS.map((step, index) => (
+              <i key={step.title} className={index <= questStage ? 'is-active' : ''} />
+            ))}
+          </div>
+          <p className="quest-label">{QUEST_STEPS[questStage].label}</p>
+          <h1>{QUEST_STEPS[questStage].title}</h1>
+          <p className="quest-description">{QUEST_STEPS[questStage].description}</p>
+          <form className="quest-form" onSubmit={handleQuestSubmit}>
+            <label htmlFor="birthday-quest-code">输入你找到的四位密码</label>
+            <input
+              id="birthday-quest-code"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={4}
+              pattern="[0-9]*"
+              value={questInput}
+              onChange={(event) => {
+                setQuestInput(event.target.value.replace(/\D/g, '').slice(0, 4));
+                if (questError) setQuestError('');
+              }}
+              placeholder="· · · ·"
+              aria-invalid={Boolean(questError)}
+              aria-describedby={questError ? 'birthday-quest-error' : undefined}
+            />
+            <button className="gesture-primary" type="submit" disabled={questInput.length !== 4 || questSuccess}>
+              {questSuccess
+                ? (questStage === QUEST_STEPS.length - 1 ? '最终星门正在开启…' : '星门已开启')
+                : (questStage === QUEST_STEPS.length - 1 ? '开启最终星门' : '解锁下一章')}
+            </button>
+          </form>
+          {questError && <p id="birthday-quest-error" className="quest-error">{questError}</p>}
+          <span className="quest-signature">N ❤️ H · {questStage + 1} / {QUEST_STEPS.length}</span>
+        </section>
       )}
     </div>
   );
