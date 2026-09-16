@@ -248,33 +248,78 @@ export default function GestureBirthdayIntro({ onDone }) {
     if (!musicContextRef.current) musicContextRef.current = new AudioContext();
     const context = musicContextRef.current;
     context.resume();
+    // An original, dreamy four-chord theme written for this page.
     const notes = [
-      ['G4', .38], ['G4', .22], ['A4', .62], ['G4', .62], ['C5', .62], ['B4', 1.05],
-      ['G4', .38], ['G4', .22], ['A4', .62], ['G4', .62], ['D5', .62], ['C5', 1.05],
-      ['G4', .38], ['G4', .22], ['G5', .62], ['E5', .62], ['C5', .62], ['B4', .62], ['A4', 1.05],
-      ['F5', .38], ['F5', .22], ['E5', .62], ['C5', .62], ['D5', .62], ['C5', 1.15],
+      ['F#4', .55], ['A4', .55], ['C#5', 1.1], ['E5', .55], ['C#5', .55], ['B4', 1.1],
+      ['E4', .55], ['A4', .55], ['B4', 1.1], ['C#5', .55], ['B4', .55], ['A4', 1.1],
+      ['F#4', .55], ['B4', .55], ['D5', 1.1], ['C#5', .55], ['A4', .55], ['F#4', 1.1],
+      ['G4', .55], ['B4', .55], ['D5', 1.1], ['A4', .55], ['F#4', .55], ['E4', 1.1],
     ];
-    const frequencies = { G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99 };
+    const padChords = [
+      ['D4', 'F#4', 'A4', 'C#5'],
+      ['A3', 'E4', 'A4', 'B4'],
+      ['B3', 'F#4', 'A4', 'D5'],
+      ['G3', 'D4', 'F#4', 'B4'],
+    ];
+    const frequencies = {
+      G3: 196, A3: 220, B3: 246.94, D4: 293.66, E4: 329.63, 'F#4': 369.99,
+      G4: 392, A4: 440, B4: 493.88, 'C#5': 554.37, D5: 587.33, E5: 659.25,
+    };
 
     const schedule = () => {
       let cursor = context.currentTime + 0.12;
       const master = context.createGain();
-      master.gain.value = 0.19;
-      master.connect(context.destination);
+      const warmth = context.createBiquadFilter();
+      master.gain.value = 0.13;
+      warmth.type = 'lowpass';
+      warmth.frequency.value = 2600;
+      master.connect(warmth);
+      warmth.connect(context.destination);
+      const themeStart = cursor;
       notes.forEach(([note, duration]) => {
         const oscillator = context.createOscillator();
+        const shimmer = context.createOscillator();
         const gain = context.createGain();
+        const shimmerGain = context.createGain();
         oscillator.type = 'sine';
+        shimmer.type = 'triangle';
         oscillator.frequency.value = frequencies[note];
+        shimmer.frequency.value = frequencies[note] * 2;
+        shimmer.detune.value = 5;
         gain.gain.setValueAtTime(0.0001, cursor);
-        gain.gain.exponentialRampToValueAtTime(0.38, cursor + 0.035);
+        gain.gain.exponentialRampToValueAtTime(0.32, cursor + 0.08);
         gain.gain.exponentialRampToValueAtTime(0.0001, cursor + duration * 0.92);
+        shimmerGain.gain.setValueAtTime(0.0001, cursor);
+        shimmerGain.gain.exponentialRampToValueAtTime(0.055, cursor + 0.11);
+        shimmerGain.gain.exponentialRampToValueAtTime(0.0001, cursor + duration * 0.82);
         oscillator.connect(gain);
+        shimmer.connect(shimmerGain);
         gain.connect(master);
+        shimmerGain.connect(master);
         oscillator.start(cursor);
+        shimmer.start(cursor);
         oscillator.stop(cursor + duration);
-        musicNodesRef.current.push(oscillator);
+        shimmer.stop(cursor + duration);
+        musicNodesRef.current.push(oscillator, shimmer);
         cursor += duration;
+      });
+      padChords.forEach((chord, chordIndex) => {
+        const chordStart = themeStart + chordIndex * 4.4;
+        chord.forEach((note, noteIndex) => {
+          const pad = context.createOscillator();
+          const padGain = context.createGain();
+          pad.type = 'sine';
+          pad.frequency.value = frequencies[note];
+          pad.detune.value = (noteIndex - 1.5) * 3;
+          padGain.gain.setValueAtTime(0.0001, chordStart);
+          padGain.gain.exponentialRampToValueAtTime(0.035, chordStart + .65);
+          padGain.gain.exponentialRampToValueAtTime(0.0001, chordStart + 4.3);
+          pad.connect(padGain);
+          padGain.connect(master);
+          pad.start(chordStart);
+          pad.stop(chordStart + 4.35);
+          musicNodesRef.current.push(pad);
+        });
       });
       const loopDelay = Math.max(1000, (cursor - context.currentTime + 1.3) * 1000);
       musicTimerRef.current = window.setTimeout(schedule, loopDelay);
@@ -428,8 +473,19 @@ export default function GestureBirthdayIntro({ onDone }) {
         aria-label={musicPlaying ? '暂停生日音乐' : '播放生日音乐'}
         title={musicPlaying ? '暂停生日音乐' : '播放生日音乐'}
       >
-        <span>{musicPlaying ? '♫' : '♪'}</span>
-        <small>{musicPlaying ? '生日旋律' : '播放音乐'}</small>
+        <span className="music-star" aria-hidden="true">
+          <svg viewBox="0 0 100 100" focusable="false">
+            <defs>
+              <linearGradient id="musicStarGradient" x1="18" y1="10" x2="82" y2="92" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stopColor="#fff2fa" />
+                <stop offset=".35" stopColor="#ff9acb" />
+                <stop offset="1" stopColor="#d85cff" />
+              </linearGradient>
+            </defs>
+            <path d="M50 3 60.8 36.2 95.7 36.2 67.4 56.7 78.2 90 50 69.4 21.8 90 32.6 56.7 4.3 36.2 39.2 36.2Z" fill="url(#musicStarGradient)" />
+          </svg>
+        </span>
+        <small>{musicPlaying ? '星光旋律' : '唤醒旋律'}</small>
       </button>
       {cameraState === 'idle' && !revealed && (
         <div className="particle-welcome">
