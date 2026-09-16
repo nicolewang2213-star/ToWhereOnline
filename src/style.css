@@ -606,32 +606,87 @@ button:active {
   position: fixed;
   z-index: 5;
   top: 50%;
-  right: 22px;
+  right: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  width: 58px;
-  min-height: 72px;
-  padding: 11px 6px;
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 22px;
-  color: rgba(255,255,255,.65);
-  background: rgba(8,10,31,.38);
-  backdrop-filter: blur(14px);
+  gap: 4px;
+  width: 86px;
+  min-height: 92px;
+  padding: 8px 5px;
+  border: 0;
+  color: rgba(255, 215, 238, .76);
+  background: transparent;
   transform: translateY(-50%);
   cursor: pointer;
-  transition: color .3s ease, border-color .3s ease, background .3s ease, box-shadow .3s ease;
+  transition: color .35s ease, transform .35s cubic-bezier(.16,1,.3,1);
 }
 
-.birthday-music-toggle span { font-size: 22px; line-height: 1; }
-.birthday-music-toggle small { font-size: 9px; letter-spacing: .08em; white-space: nowrap; }
-.birthday-music-toggle:hover,
-.birthday-music-toggle.is-playing { color: #fff5cb; border-color: rgba(255,222,153,.46); background: rgba(31,25,62,.58); box-shadow: 0 0 30px rgba(143,167,255,.2); }
-.birthday-music-toggle.is-playing span { animation: musicNotePulse 1.6s ease-in-out infinite; }
+.birthday-music-toggle small {
+  font-size: 9px;
+  letter-spacing: .14em;
+  white-space: nowrap;
+  text-shadow: 0 0 12px rgba(255, 113, 186, .55);
+}
 
-@keyframes musicNotePulse {
-  50% { transform: scale(1.18) rotate(-7deg); text-shadow: 0 0 14px rgba(255,226,154,.75); }
+.music-star {
+  position: relative;
+  display: block;
+  width: 58px;
+  height: 58px;
+  filter: drop-shadow(0 0 7px rgba(255, 126, 192, .85)) drop-shadow(0 0 22px rgba(216, 92, 255, .42));
+  animation: musicStarFloat 3.2s ease-in-out infinite;
+}
+
+.music-star svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.music-star::before,
+.music-star::after {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffd7ef;
+  box-shadow: 0 0 8px #ff82c4, 16px 14px 0 -1px #c5b7ff, -13px 24px 0 -1px #ffabd4;
+  content: '';
+  opacity: .55;
+  pointer-events: none;
+}
+
+.music-star::before { top: 2px; right: 4px; }
+.music-star::after { bottom: 7px; left: 2px; transform: scale(.72) rotate(70deg); }
+
+.birthday-music-toggle:hover {
+  color: #fff1fa;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.birthday-music-toggle.is-playing { color: #fff1fa; }
+.birthday-music-toggle.is-playing .music-star { animation: musicStarOrbit 6s linear infinite; }
+.birthday-music-toggle.is-playing .music-star svg { animation: musicStarGlow 1.8s ease-in-out infinite; }
+.birthday-music-toggle.is-playing .music-star::before,
+.birthday-music-toggle.is-playing .music-star::after { animation: musicSparkle 1.5s ease-in-out infinite alternate; }
+
+@keyframes musicStarFloat {
+  50% { transform: translateY(-4px) rotate(-5deg) scale(1.04); }
+}
+
+@keyframes musicStarOrbit {
+  50% { filter: drop-shadow(0 0 11px rgba(255, 156, 211, 1)) drop-shadow(0 0 30px rgba(216, 92, 255, .62)); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes musicStarGlow {
+  50% { transform: scale(1.12); opacity: .88; }
+}
+
+@keyframes musicSparkle {
+  to { opacity: 1; transform: scale(1.28) rotate(30deg); }
 }
 
 .particle-welcome,
@@ -808,6 +863,8 @@ button:active {
 @media (max-width: 600px) {
   .particle-welcome, .particle-error, .particle-birthday { padding: 24px 16px; }
   .particle-birthday span { font-size: 15px; line-height: 1.7; }
-  .birthday-music-toggle { top: 22px; right: 14px; width: 48px; min-height: 52px; border-radius: 18px; transform: none; }
+  .birthday-music-toggle { top: 14px; right: 9px; width: 64px; min-height: 64px; transform: none; }
+  .birthday-music-toggle:hover { transform: scale(1.05); }
+  .music-star { width: 48px; height: 48px; }
   .birthday-music-toggle small { display: none; }
 }
