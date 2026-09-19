@@ -4,8 +4,8 @@ import * as THREE from 'three';
 const WASM_ROOT = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm';
 const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 const PARTICLE_COUNT = 7200;
-const QUEST_STORAGE_KEY = 'nh-birthday-quest-v1-stage';
-const QUEST_COMPLETE_KEY = 'nh-birthday-quest-v1-complete';
+const QUEST_STORAGE_KEY = 'nh-birthday-quest-v2-stage';
+const QUEST_COMPLETE_KEY = 'nh-birthday-quest-v2-complete';
 
 const QUEST_STEPS = [
   {
