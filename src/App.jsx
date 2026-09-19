@@ -24,9 +24,10 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState('anniversary');
   const [showMobileNotice, setShowMobileNotice] = useState(window.innerWidth < 768);
-  const [showBirthdayIntro, setShowBirthdayIntro] = useState(
-    () => localStorage.getItem('nh-birthday-quest-v1-complete') !== 'true'
-  );
+  const [showBirthdayIntro, setShowBirthdayIntro] = useState(() => {
+    const isPreview = new URLSearchParams(window.location.search).get('birthday') === '1';
+    return isPreview || localStorage.getItem('nh-birthday-quest-v2-complete') !== 'true';
+  });
 
   useEffect(() => {
     const handleResize = () => {
