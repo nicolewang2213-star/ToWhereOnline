@@ -17,6 +17,7 @@ import LettersIcon from './components/letters/LettersIcon';
 import MusicPlayer from './components/MusicPlayer';
 import AnniversaryOrbit from './components/AnniversaryOrbit';
 import GestureBirthdayIntro from './components/GestureBirthdayIntro';
+import AccountAccess from './components/AccountAccess';
 
 export default function App() {
   const [page, setPage] = useState('home');
@@ -106,6 +107,7 @@ export default function App() {
     <EnergyProvider>
         <div style={{ width: '100%', height: '100%', margin: 0, padding: 0 }}>
           {showBirthdayIntro && <GestureBirthdayIntro onDone={openUnlockedSite} />}
+          {!showBirthdayIntro && <AccountAccess />}
           {/* Mobile Notice Modal */}
           {showMobileNotice && isMobile && (
             <div style={{
