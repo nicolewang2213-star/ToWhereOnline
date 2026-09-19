@@ -82,6 +82,12 @@ export default function App() {
     setTabWithHash(tab);
   }, [setTabWithHash]);
 
+  const openUnlockedSite = useCallback(() => {
+    setShowBirthdayIntro(false);
+    setPage('home');
+    setTabWithHash('letters');
+  }, [setTabWithHash]);
+
   const goTo = useCallback((p) => setPage(p), []);
 
   const goToCity = useCallback((cityName) => {
@@ -98,7 +104,7 @@ export default function App() {
   return (
     <EnergyProvider>
         <div style={{ width: '100%', height: '100%', margin: 0, padding: 0 }}>
-          {showBirthdayIntro && <GestureBirthdayIntro onDone={() => setShowBirthdayIntro(false)} />}
+          {showBirthdayIntro && <GestureBirthdayIntro onDone={openUnlockedSite} />}
           {/* Mobile Notice Modal */}
           {showMobileNotice && isMobile && (
             <div style={{
