@@ -288,22 +288,22 @@ export default function GestureBirthdayIntro({ onDone }) {
     if (!musicContextRef.current) musicContextRef.current = new AudioContext();
     const context = musicContextRef.current;
     context.resume();
-    // An original, dreamy four-chord theme written for this page.
+    // A soft, music-box arrangement of the traditional Happy Birthday melody.
     const notes = [
-      ['F#4', .55], ['A4', .55], ['C#5', 1.1], ['E5', .55], ['C#5', .55], ['B4', 1.1],
-      ['E4', .55], ['A4', .55], ['B4', 1.1], ['C#5', .55], ['B4', .55], ['A4', 1.1],
-      ['F#4', .55], ['B4', .55], ['D5', 1.1], ['C#5', .55], ['A4', .55], ['F#4', 1.1],
-      ['G4', .55], ['B4', .55], ['D5', 1.1], ['A4', .55], ['F#4', .55], ['E4', 1.1],
+      ['D4', .35], ['D4', .2], ['E4', .7], ['D4', .7], ['G4', .7], ['F#4', 1.75],
+      ['D4', .35], ['D4', .2], ['E4', .7], ['D4', .7], ['A4', .7], ['G4', 1.75],
+      ['D4', .35], ['D4', .2], ['D5', .7], ['B4', .7], ['G4', .7], ['F#4', .7], ['E4', 1.05],
+      ['C5', .35], ['C5', .2], ['B4', .7], ['G4', .7], ['A4', .7], ['G4', 1.75],
     ];
     const padChords = [
-      ['D4', 'F#4', 'A4', 'C#5'],
-      ['A3', 'E4', 'A4', 'B4'],
-      ['B3', 'F#4', 'A4', 'D5'],
-      ['G3', 'D4', 'F#4', 'B4'],
+      ['G3', 'D4', 'G4', 'B4'],
+      ['D3', 'A3', 'D4', 'F#4'],
+      ['G3', 'D4', 'G4', 'B4'],
+      ['C4', 'E4', 'G4', 'B4'],
     ];
     const frequencies = {
-      G3: 196, A3: 220, B3: 246.94, D4: 293.66, E4: 329.63, 'F#4': 369.99,
-      G4: 392, A4: 440, B4: 493.88, 'C#5': 554.37, D5: 587.33, E5: 659.25,
+      D3: 146.83, G3: 196, A3: 220, C4: 261.63, D4: 293.66, E4: 329.63, 'F#4': 369.99,
+      G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33,
     };
 
     const schedule = () => {
@@ -508,6 +508,7 @@ export default function GestureBirthdayIntro({ onDone }) {
 
   const beginQuest = () => {
     stopCamera();
+    stopBirthdayMusic();
     interactionRef.current.mode = 'reveal';
     opennessRef.current = 0.34;
     localStorage.setItem(QUEST_STORAGE_KEY, '0');
@@ -547,26 +548,28 @@ export default function GestureBirthdayIntro({ onDone }) {
     <div className={`gesture-intro particle-version ${revealed ? 'is-revealed' : ''}`} role="dialog" aria-modal="true" aria-label="生日粒子宇宙">
       <div ref={canvasHostRef} className="gesture-particle-canvas" aria-hidden="true" />
       <video ref={videoRef} className="gesture-camera-source" playsInline muted />
-      <button
-        className={`birthday-music-toggle ${musicPlaying ? 'is-playing' : ''}`}
-        onClick={musicPlaying ? stopBirthdayMusic : startBirthdayMusic}
-        aria-label={musicPlaying ? '暂停生日音乐' : '播放生日音乐'}
-        title={musicPlaying ? '暂停生日音乐' : '播放生日音乐'}
-      >
-        <span className="music-star" aria-hidden="true">
-          <svg viewBox="0 0 100 100" focusable="false">
-            <defs>
-              <linearGradient id="musicStarGradient" x1="18" y1="10" x2="82" y2="92" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stopColor="#fff2fa" />
-                <stop offset=".35" stopColor="#ff9acb" />
-                <stop offset="1" stopColor="#d85cff" />
-              </linearGradient>
-            </defs>
-            <path d="M50 3 60.8 36.2 95.7 36.2 67.4 56.7 78.2 90 50 69.4 21.8 90 32.6 56.7 4.3 36.2 39.2 36.2Z" fill="url(#musicStarGradient)" />
-          </svg>
-        </span>
-        <small>{musicPlaying ? '星光旋律' : '唤醒旋律'}</small>
-      </button>
+      {questStage < 0 && (
+        <button
+          className={`birthday-music-toggle ${musicPlaying ? 'is-playing' : ''}`}
+          onClick={musicPlaying ? stopBirthdayMusic : startBirthdayMusic}
+          aria-label={musicPlaying ? '暂停生日快乐歌' : '播放生日快乐歌'}
+          title={musicPlaying ? '暂停生日快乐歌' : '播放生日快乐歌'}
+        >
+          <span className="music-star" aria-hidden="true">
+            <svg viewBox="0 0 100 100" focusable="false">
+              <defs>
+                <linearGradient id="musicStarGradient" x1="18" y1="10" x2="82" y2="92" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stopColor="#fff2fa" />
+                  <stop offset=".35" stopColor="#ff9acb" />
+                  <stop offset="1" stopColor="#d85cff" />
+                </linearGradient>
+              </defs>
+              <path d="M50 3 60.8 36.2 95.7 36.2 67.4 56.7 78.2 90 50 69.4 21.8 90 32.6 56.7 4.3 36.2 39.2 36.2Z" fill="url(#musicStarGradient)" />
+            </svg>
+          </span>
+          <small>{musicPlaying ? '生日旋律' : '播放生日歌'}</small>
+        </button>
+      )}
       {cameraState === 'idle' && !revealed && (
         <div className="particle-welcome">
           <p>N &amp; H · A GIFT FROM THE UNIVERSE</p>
