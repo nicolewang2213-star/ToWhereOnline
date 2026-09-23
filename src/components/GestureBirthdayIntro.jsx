@@ -27,9 +27,9 @@ const QUEST_STEPS = [
     code: '0925',
   },
   {
-    label: 'FINAL MISSION · THE HIDDEN ENDING',
-    title: '隐藏彩蛋',
-    description: '你已经解锁了生日礼物，但故事还没有结束。参加最后一场彩蛋晚餐，找到最终密码，才能真正进入我们的宇宙。',
+    label: 'FINAL MISSION · THE BIRTHDAY GIFT',
+    title: '最后的礼物',
+    description: '找到 Nicole，兑换属于你的生日礼物，并从她那里获得最后一组四位密码。输入密码，开启最终环节。',
     code: '2026',
   },
 ];
@@ -106,6 +106,7 @@ export default function GestureBirthdayIntro({ onDone }) {
   const [questInput, setQuestInput] = useState('');
   const [questError, setQuestError] = useState('');
   const [questSuccess, setQuestSuccess] = useState(false);
+  const [showFinalHint, setShowFinalHint] = useState(false);
   const [error, setError] = useState('');
   const [musicPlaying, setMusicPlaying] = useState(false);
 
@@ -526,7 +527,10 @@ export default function GestureBirthdayIntro({ onDone }) {
     setQuestError('');
     setQuestSuccess(true);
     if (questStage === QUEST_STEPS.length - 1) {
-      questTimerRef.current = window.setTimeout(completeIntro, 1300);
+      questTimerRef.current = window.setTimeout(() => {
+        setQuestSuccess(false);
+        setShowFinalHint(true);
+      }, 900);
       return;
     }
 
@@ -587,7 +591,7 @@ export default function GestureBirthdayIntro({ onDone }) {
           <button className="gesture-primary" onClick={beginQuest}>开启生日任务</button>
         </div>
       )}
-      {revealed && questStage >= 0 && (
+      {revealed && questStage >= 0 && !showFinalHint && (
         <section className={`birthday-quest ${questSuccess ? 'is-unlocking' : ''}`} aria-live="polite">
           <div className="quest-progress" aria-label={`生日任务进度：第 ${questStage + 1} 章，共 ${QUEST_STEPS.length} 章`}>
             {QUEST_STEPS.map((step, index) => (
@@ -624,6 +628,18 @@ export default function GestureBirthdayIntro({ onDone }) {
           {questError && <p id="birthday-quest-error" className="quest-error">{questError}</p>}
           <span className="quest-signature">N ❤️ H · {questStage + 1} / {QUEST_STEPS.length}</span>
         </section>
+      )}
+      {showFinalHint && (
+        <div className="final-hint-backdrop" role="presentation">
+          <section className="final-hint-card" role="dialog" aria-modal="true" aria-labelledby="final-hint-title">
+            <span className="final-hint-star" aria-hidden="true">✦</span>
+            <p>ONE MORE SECRET</p>
+            <h2 id="final-hint-title">仔细寻找</h2>
+            <div className="final-hint-divider" aria-hidden="true" />
+            <p className="final-hint-message">网站里还有一枚隐藏彩蛋，等你发现。</p>
+            <button className="gesture-primary" onClick={completeIntro}>进入我们的宇宙</button>
+          </section>
+        </div>
       )}
     </div>
   );

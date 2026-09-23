@@ -23,7 +23,7 @@ export default function App() {
   const [page, setPage] = useState('home');
   const [selectedCity, setSelectedCity] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [activeTab, setActiveTab] = useState('anniversary');
+  const [activeTab, setActiveTab] = useState(() => window.innerWidth < 768 ? 'towhere' : 'keywords');
   const [showMobileNotice, setShowMobileNotice] = useState(window.innerWidth < 768);
   const [showBirthdayIntro, setShowBirthdayIntro] = useState(() => {
     const isPreview = new URLSearchParams(window.location.search).get('birthday') === '1';
@@ -87,8 +87,8 @@ export default function App() {
   const openUnlockedSite = useCallback(() => {
     setShowBirthdayIntro(false);
     setPage('home');
-    setTabWithHash('letters');
-  }, [setTabWithHash]);
+    setTabWithHash(isMobile ? 'towhere' : 'keywords');
+  }, [isMobile, setTabWithHash]);
 
   const goTo = useCallback((p) => setPage(p), []);
 
